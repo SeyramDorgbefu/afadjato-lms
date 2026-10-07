@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Afadjato SHS ICT Skills LMS</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root{--primary:#164a5b;--secondary:#2e7d92;--accent:#f4b942;--bg:#f4f7f8;--card:#fff;--text:#1f2933;--muted:#64748b;--success:#198754;--danger:#c0392b}
+*{box-sizing:border-box}body{margin:0;font-family:Arial,Helvetica,sans-serif;background:var(--bg);color:var(--text)}
+.hidden{display:none!important}.login-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;background:linear-gradient(135deg,#123f4e,#2e7d92)}
+.login-card{width:min(500px,100%);background:#fff;border-radius:22px;padding:34px;box-shadow:0 18px 50px rgba(0,0,0,.25)}
+.brand{text-align:center}.brand h1{color:var(--primary);font-size:1.6rem;margin:0 0 8px}.brand p{color:var(--muted);margin:0 0 22px}.story-badge{background:#eaf4f6;color:#164a5b;padding:10px 14px;border-radius:10px;font-size:.9rem;margin-bottom:20px}
+label{display:block;font-weight:700;margin:14px 0 7px}input,select,textarea{width:100%;padding:13px;border:1px solid #ccd6dc;border-radius:10px;font-size:1rem;background:#fff;font-family:inherit}button{border:0;border-radius:10px;padding:12px 18px;font-size:1rem;font-weight:700;cursor:pointer}button:disabled{opacity:.6;cursor:wait}
+.btn{background:var(--primary);color:#fff}.btn:hover{background:#103b49}.btn-alt{background:#e8eef0;color:#164a5b}.btn-danger{background:var(--danger);color:#fff}.login-note{font-size:.88rem;color:var(--muted);margin-top:16px;text-align:center}
+.link-btn{background:none;color:var(--secondary);padding:0;font-size:.95rem;text-decoration:underline}
+.msg{padding:12px;border-radius:10px;margin-top:14px;font-size:.92rem}.msg.err{background:#fdecea;color:#8f2a1f;border-left:4px solid var(--danger)}.msg.ok{background:#e8f6ee;color:#14532d;border-left:4px solid var(--success)}
+#app{display:flex;min-height:100vh}.sidebar{width:260px;background:#123f4e;color:#fff;padding:22px 16px;position:fixed;inset:0 auto 0 0;overflow:auto}.sidebar h2{font-size:1.15rem;margin:0 0 4px}.sidebar small{color:#c7e1e7}.nav-btn{width:100%;text-align:left;background:transparent;color:#e9f6f8;padding:12px;margin-top:6px}.nav-btn:hover,.nav-btn.active{background:#2e7d92}.main{margin-left:260px;width:calc(100% - 260px);padding:28px}
+.topbar{display:flex;justify-content:space-between;align-items:center;gap:16px;margin-bottom:22px}.pills{display:flex;gap:8px;flex-wrap:wrap;align-items:center}.role-pill{background:#eaf4f6;color:#164a5b;padding:8px 12px;border-radius:999px;font-weight:700}.sync-pill{padding:8px 12px;border-radius:999px;font-weight:700;font-size:.85rem;background:#e8f6ee;color:#14532d}.sync-pill.wait{background:#fff8e6;color:#8a5a00}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:16px}.card{background:var(--card);border-radius:16px;padding:20px;box-shadow:0 4px 16px rgba(15,23,42,.08);margin-bottom:18px}.card h3{margin-top:0;color:#164a5b}.stat{font-size:2rem;font-weight:800;color:var(--primary)}.muted{color:var(--muted)}
+.lesson-list{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px}.lesson-card{background:#fff;border-radius:16px;padding:20px;box-shadow:0 4px 16px rgba(15,23,42,.08);border-left:6px solid var(--secondary)}.lesson-card .meta{color:var(--muted);font-size:.9rem}
+.frame{border:1px solid #d9e3e7;border-radius:14px;padding:18px;margin:14px 0;background:#fff}.frame-title{font-weight:800;color:#164a5b}.frame-time{float:right;background:#eaf4f6;padding:4px 9px;border-radius:999px;font-size:.8rem}.steps{background:#f7fafb;border-left:4px solid var(--accent);padding:14px;margin-top:12px}.visual{background:#eef7f8;padding:12px;border-radius:10px;margin-top:10px}.checklist label{font-weight:400;display:flex;gap:8px;align-items:center}.checklist input{width:auto}
+.progress{height:12px;background:#e7edf0;border-radius:999px;overflow:hidden}.progress>div{height:100%;background:var(--success);width:0%}
+.timer{font-size:2.2rem;font-weight:800;text-align:center;color:#c0392b;padding:14px;background:#fff5f5;border-radius:14px}.tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px}.tab{background:#e8eef0;color:#164a5b}.tab.active{background:var(--primary);color:#fff}.table-wrap{overflow:auto}table{width:100%;border-collapse:collapse;background:#fff}th,td{padding:11px;border-bottom:1px solid #e5eaed;text-align:left}th{background:#eef7f8}td select{padding:8px;width:auto}
+.notice{padding:13px;border-radius:10px;background:#fff8e6;border-left:4px solid var(--accent);margin:12px 0}
+@media(max-width:800px){#app{display:block}.sidebar{position:static;width:100%;display:flex;flex-wrap:wrap;gap:4px}.sidebar .nav-btn{width:auto}.main{margin-left:0;width:100%;padding:16px}.topbar{align-items:flex-start;flex-direction:column}}
+</style>
+</head>
+<body>
+
+<!-- ================= LOGIN / SIGN UP ================= -->
+<section id="loginScreen" class="login-wrap">
+  <div class="login-card">
+    <div class="brand">
+      <h1>Afadjato SHS ICT Skills LMS</h1>
+      <p>Word-Processing Skills for SHS 1 Students</p>
+    </div>
+    <div class="story-badge">4 lessons, guided practice, formal letter production, timed assessment, peer feedback, re-teach and extension.</div>
+    <div id="configWarn" class="msg err hidden"><b>Not connected yet.</b> Open this file in a text editor and paste your Supabase URL and anon key at the top of the script (see SETUP.md).</div>
+    <form id="authForm">
+      <div id="nameRow" class="hidden"><label for="fullName">Full name</label><input id="fullName" autocomplete="name" placeholder="e.g. Ama Mensah"></div>
+      <label for="email">Email</label><input id="email" type="email" autocomplete="email" required>
+      <label for="password">Password</label><input id="password" type="password" autocomplete="current-password" minlength="6" required>
+      <button class="btn" id="authBtn" style="width:100%;margin-top:18px">Log in</button>
+    </form>
+    <div id="authMsg"></div>
+    <p class="login-note"><span id="switchText">New student?</span> <button type="button" class="link-btn" id="switchBtn">Create account</button></p>
+    <p class="login-note">Teacher and administrator access is assigned by the school administrator after you create an account.</p>
+  </div>
+</section>
+
+<!-- ================= APP ================= -->
+<section id="app" class="hidden">
+  <aside class="sidebar">
+    <h2>Afadjato SHS LMS</h2><small>ICT Skills • SHS 1</small>
+    <button class="nav-btn active" data-page="dashboard">Dashboard</button>
+    <button class="nav-btn" data-page="lessons" data-roles="student">Lessons</button>
+    <button class="nav-btn" data-page="practice" data-roles="student">Practice</button>
+    <button class="nav-btn" data-page="assessment" data-roles="student">Assessment</button>
+    <button class="nav-btn" data-page="progress" data-roles="student">My Progress</button>
+    <button class="nav-btn" data-page="teaching" data-roles="teacher,admin">Teaching Plan</button>
+    <button class="nav-btn" data-page="students" data-roles="teacher,admin">Student Monitoring</button>
+    <button class="nav-btn" data-page="admin" data-roles="admin">Administration</button>
+    <button class="nav-btn" data-page="reports" data-roles="admin">Reports</button>
+    <button class="nav-btn" id="logoutBtn">Log out</button>
+  </aside>
+  <main class="main">
+    <div class="topbar">
+      <div><h1 id="pageTitle">Dashboard</h1><div class="muted" id="welcomeText"></div></div>
+      <div class="pills"><div class="sync-pill hidden" id="syncPill"></div><div class="role-pill" id="rolePill"></div></div>
+    </div>
+
+    <section id="page-dashboard" class="page"></section>
+
+    <section id="page-lessons" class="page hidden">
+      <div class="card"><h3>Course: Word-Processing Skills</h3><p>Complete the four lessons in order. Each lesson follows the storyboard's short, simple instructions and practical classroom tasks.</p><div class="progress"><div id="courseBar"></div></div><p id="coursePercent" class="muted"></p></div>
+      <div id="lessonList" class="lesson-list"></div>
+      <div id="lessonViewer" class="hidden"></div>
+    </section>
+
+    <section id="page-practice" class="page hidden">
+      <div class="card"><h3>Guided Practice</h3><p>Use these practice activities from the storyboard. Tick a task after you have done it in Microsoft Word. Your ticks are saved to your account.</p>
+      <div class="tabs"><button class="tab active" data-practice="l1">Lesson 1</button><button class="tab" data-practice="l2">Lesson 2</button><button class="tab" data-practice="l3">Lesson 3</button><button class="tab" data-practice="l4">Lesson 4</button></div>
+      <div id="practiceContent"></div></div>
+    </section>
+
+    <section id="page-assessment" class="page hidden">
+      <div class="card"><h3>Lesson 4 Timed Practice Letter</h3><p>Create a full formal letter in Microsoft Word within 20 minutes. Scenario: write to request an ICT laboratory visit. Use the letterhead, date, address, salutation, body, closing and signature block.</p><div class="timer" id="timer">20:00</div><div style="display:flex;gap:8px;margin:12px 0"><button class="btn" id="startTimer">Start</button><button class="btn-alt" id="resetTimer">Reset</button></div>
+      <div class="notice">This mirrors the storyboard's assessment-like condition. The teacher should circulate silently while students complete the task.</div>
+      <textarea id="reflection" rows="4" placeholder="After completing your Word document, record: What did you do well? What will you fix?"></textarea>
+      <div id="assessStatus" class="muted" style="margin-top:10px"></div>
+      <button class="btn" id="submitAssessment" style="margin-top:12px">Submit Completion Record</button></div>
+      <div class="card"><h3>Peer Feedback Rubric</h3><p>Review a partner's work using Accuracy, Formatting and Completeness. Your ticks are saved when you submit the completion record.</p>
+      <div class="checklist" id="rubricChecks">
+        <label><input type="checkbox" value="accuracy"> Accuracy: the required information is correct</label>
+        <label><input type="checkbox" value="formatting"> Formatting: layout, bold, alignment and spacing match the task</label>
+        <label><input type="checkbox" value="completeness"> Completeness: all parts of the formal letter are present</label>
+      </div></div>
+    </section>
+
+    <section id="page-progress" class="page hidden"><div id="progressContent"></div></section>
+
+    <section id="page-teaching" class="page hidden">
+      <div class="card"><h3>Teaching Plan</h3><p>Follow the storyboard sequence. Each lesson is 50 minutes and designed for pair/small-group work because only 22 of 30 lab computers are functional.</p></div>
+      <div id="teacherPlan"></div>
+    </section>
+
+    <section id="page-students" class="page hidden">
+      <div class="card"><h3>Student Monitoring</h3><p>Live data from every student account. Use it to decide who needs re-teaching and who is ready for the extension task.</p>
+      <button class="btn-alt" id="refreshStudents">Refresh</button>
+      <div class="table-wrap" style="margin-top:12px"><table><thead><tr><th>Student</th><th>Email</th><th>Lessons</th><th>Practice ticks</th><th>Assessment</th><th>Rubric</th><th>Support</th></tr></thead><tbody id="studentTable"></tbody></table></div></div>
+    </section>
+
+    <section id="page-admin" class="page hidden">
+      <div class="card"><h3>Administration</h3><div class="grid" id="adminStats"></div></div>
+      <div class="card"><h3>Users and Roles</h3><p class="muted">New accounts start as Student. Promote teachers and administrators here.</p>
+      <div class="table-wrap"><table><thead><tr><th>Name</th><th>Email</th><th>Role</th><th></th></tr></thead><tbody id="userTable"></tbody></table></div><div id="adminMsg"></div></div>
+    </section>
+
+    <section id="page-reports" class="page hidden"><div id="reportsContent"></div></section>
+  </main>
+</section>
+
+<script>
+/* ============================================================
+   1. CONFIGURATION: paste your own values from
+      Supabase > Project Settings > API
+   ============================================================ */
+const SUPABASE_URL = "https://kcvybaxlrvvgtipkymde.supabase.co";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtjdnliYXhscnZ2Z3RpcGt5bWRlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTEzMTQxOTMsImV4cCI6MjEwNjg5MDE5M30.Xb9vR7j28FFJ66Gp1vH5KQ9gJ_3EqvkxrxmTDo4C0d4";
+
+const configured = !SUPABASE_URL.startsWith("YOUR_") && !SUPABASE_ANON_KEY.startsWith("YOUR_");
+const sb = configured ? supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
+
+/* ============================================================
+   2. COURSE CONTENT (from the instructional storyboard)
+   ============================================================ */
+const storyboard = [
+ {id:1,title:"Foundations",subtitle:"Meeting the computer, opening Microsoft Word, typing and saving a document",minutes:50,frames:[
+  ["1.1","Why this matters","2 min","Word Processing = A Skill for Your Future. Microsoft Word is used for letters for jobs, school and business.","Photo card of a young Ghanaian adult typing a job-application letter."],
+  ["1.2","Parts of the computer","5 min","Monitor, Keyboard, Mouse, System/Power Button and Mouse Pointer.","Large labelled diagram with simple icons."],
+  ["2.1","Turning on and opening Microsoft Word","5 min","1) Power button → 2) Wait for screen → 3) Find the blue W icon → 4) Click twice.","Printed numbered screenshot card for pairs."],
+  ["2.2","A tour of the Word screen","5 min","Find the Title bar, Ribbon, blank page, blinking cursor and Save icon.","Labelled screenshot with four large callouts."],
+  ["3.1","Typing your name and today's date","8 min","Type your full name. Press Enter. Type today's date.","Example output: Ama Mensah / 12 January 2026."],
+  ["3.2","Saving your work","5 min","1) Click Save or Ctrl+S → 2) Type your_name_ICT1 → 3) Click Save again.","Backup plan: if power goes out before you save, redo the task next time."],
+  ["4.1","Wrap-up and self-check","5 min","I can turn on the computer. I can open Word. I can type and save.","Three tick-box exit card."]
+ ]},
+ {id:2,title:"Basic Formatting",subtitle:"Bold, italic, underline, font size, alignment and guided practice",minutes:50,frames:[
+  ["1.1","Warm-up recap","5 min","Open Word. Open the file you saved last time.","Same opening-a-file screenshot style as Lesson 1."],
+  ["1.2","Bold, Italic, Underline","7 min","Use B, I and U. Challenge: make the word STRONG bold.","Before/after word pairs and matching Ribbon icons."],
+  ["2.1","Font size and alignment","8 min","Choose a bigger font number. Use left, centre, right and justify alignment.","Before/after visual: small vs large and left vs centred."],
+  ["3.1","Guided practice","15 min","Format a short paragraph to match the target image.","Printed answer card showing the finished paragraph."],
+  ["3.2","Peer-check and save","5 min","Compare with a partner. Does your page match the target image? Save your file.","Tick-box checklist."]
+ ]},
+ {id:3,title:"Building a Formal Letter",subtitle:"Letterhead, date, address, salutation, body spacing and signature block",minutes:50,frames:[
+  ["1.1","What a formal letter looks like","5 min","Identify: 1 Letterhead, 2 Date, 3 Address, 4 Salutation, 5 Body, 6 Signature block.","Annotated sample letter poster and A5 handout."],
+  ["1.2","Letterhead and date","6 min","1) Type your school name: top, bold and centred → 2) Press Enter twice → 3) Type today's date: left-aligned.","Numbered screenshot sequence using bold and alignment."],
+  ["2.1","Address and salutation","6 min","[Recipient Name], [Recipient Address], Dear [Name],","Fill-in-the-blank template card."],
+  ["2.2","Body paragraph spacing","6 min","Leave one blank line after the salutation. Type your paragraph. Leave one blank line before 'Yours faithfully'.","Before/after visual: cramped vs properly spaced."],
+  ["3.1","Closing and signature block","5 min","Type 'Yours faithfully,' → press Enter 3 times → type your full name.","Finished signature block with a clear three-line gap."],
+  ["3.2","Self-check against the rubric and save","7 min","Check Accuracy, Formatting and Completeness using simple self-rating icons, then save.","Simple face-icon rubric."]
+ ]},
+ {id:4,title:"Full Assembly and Differentiated Practice",subtitle:"Timed practice, peer feedback, re-teach and extension groups",minutes:50,frames:[
+  ["1.1","Timed practice letter","20 min","Create a new formal letter from a blank page within 20 minutes. Scenario: request an ICT laboratory visit.","Visible countdown timer or paper clock face."],
+  ["1.2","Peer feedback using the rubric","8 min","Exchange work. Give one thing you liked and one thing to fix.","Partner-review rubric."],
+  ["2.1","Targeted small-group re-teach","12 min","Students needing support practise the specific missing skill using step cards from Lessons 1–3.","Re-teach station with shared computers and close teacher support."],
+  ["2.2","Extension task","Parallel","Create a one-page newsletter about your school using headings, bold text and at least one table.","Open-ended sample newsletter inspiration."],
+  ["3.1","Reflection and goal-setting","5 min","One thing I got better at this week. One thing I still want to practise.","Simple two-line exit card."]
+ ]}
+];
+
+const practiceItems = {
+ l1:["Type your full name.","Press Enter and type today's date.","Save the file as your_name_ICT1.","Tick what you can do: turn on, open Word, type and save."],
+ l2:["Open your saved file.","Make a word bold, italic and underlined.","Make your name larger and centre it.","Format a short paragraph to match a target image.","Peer-check and save."],
+ l3:["Identify the six parts of a formal letter.","Create a bold, centred school letterhead.","Add date, address and salutation.","Write a 2–3 sentence body with correct spacing.","Add 'Yours faithfully,' and a signature block.","Self-check Accuracy, Formatting and Completeness."],
+ l4:["Complete a full letter within 20 minutes.","Exchange work with a partner.","Give one thing you liked and one thing to fix.","If struggling, join the re-teach group; if confident, create the newsletter extension.","Set one improvement goal."]
+};
+
+/* ============================================================
+   3. HELPERS
+   ============================================================ */
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const ROLE_LABEL = {student:"Student", teacher:"Teacher", admin:"Administrator"};
+const PAGE_TITLE = {dashboard:"Dashboard",lessons:"Lessons",practice:"Practice",assessment:"Assessment",progress:"My Progress",teaching:"Teaching Plan",students:"Student Monitoring",admin:"Administration",reports:"Reports"};
+const lsGet = (k, d) => { try { return JSON.parse(localStorage.getItem(k)) ?? d; } catch { return d; } };
+const lsSet = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} };
+const showMsg = (id, text, kind="err") => { $(id).innerHTML = text ? `<div class="msg ${kind}">${esc(text)}</div>` : ""; };
+
+let me = null;                    // signed-in profile {id, full_name, email, role}
+let mine = {progress:{}, practice:{}, assessment:null};  // student's own data
+let queue = [];                   // writes waiting to reach Supabase
+let flushing = false, timerInt = null, remaining = 1200, authMode = "login";
+
+const doneCount = () => Object.keys(mine.progress).filter(k => mine.progress[k]).length;
+const lessonPct = () => Math.round(doneCount() / 4 * 100);
+const supportLabel = n => n < 2 ? "Re-teach recommended" : n === 4 ? "Extension ready" : "Continue practice";
+
+/* ============================================================
+   4. OFFLINE-FRIENDLY SAVING
+      Every save goes into a small queue and is sent to Supabase.
+      If the internet is down, the queue waits and retries.
+   ============================================================ */
+const qKey = () => "afadjatoQueue_" + me.id;
+const cKey = () => "afadjatoCache_" + me.id;
+
+function setSync() {
+  const pill = $("syncPill");
+  if (!me || me.role !== "student") { pill.classList.add("hidden"); return; }
+  pill.classList.remove("hidden");
+  if (queue.length) { pill.textContent = `⏳ ${queue.length} change${queue.length>1?"s":""} waiting to sync`; pill.classList.add("wait"); }
+  else { pill.textContent = "✔ Saved online"; pill.classList.remove("wait"); }
+}
+
+function enqueue(table, row, conflict) {
+  const keys = conflict.split(",").map(s => s.trim());
+  queue = queue.filter(j => !(j.table === table && keys.every(k => j.row[k] === row[k])));  // keep only the latest write per record
+  queue.push({table, row, conflict});
+  lsSet(qKey(), queue); lsSet(cKey(), mine); setSync(); flush();
+}
+
+async function flush() {
+  if (flushing || !queue.length || !sb) return;
+  flushing = true;
+  while (queue.length) {
+    const j = queue[0];
+    let error = null;
+    try { ({error} = await sb.from(j.table).upsert(j.row, {onConflict: j.conflict})); }
+    catch (e) { error = {message: String(e)}; }
+    if (error) {
+      if (error.code) { console.warn("Dropping rejected save", j, error); queue.shift(); lsSet(qKey(), queue); continue; }  // server said no: do not retry forever
+      break;                                                                                                            // network problem: try later
+    }
+    queue.shift(); lsSet(qKey(), queue);
+  }
+  flushing = false; setSync();
+}
+window.addEventListener("online", flush);
+setInterval(flush, 30000);
+
+function applyQueue() {
+  for (const j of queue) {
+    if (j.table === "lesson_progress") mine.progress[j.row.lesson_id] = true;
+    else if (j.table === "practice_checks") { (mine.practice[j.row.lesson_key] ||= {})[j.row.item_index] = j.row.checked; }
+    else if (j.table === "assessments") mine.assessment = {reflection: j.row.reflection, rubric_score: j.row.rubric_score};
+  }
+}
+
+async function loadMine() {
+  queue = lsGet(qKey(), []);
+  try {
+    const [p, c, a] = await Promise.all([
+      sb.from("lesson_progress").select("lesson_id").eq("user_id", me.id),
+      sb.from("practice_checks").select("lesson_key,item_index,checked").eq("user_id", me.id),
+      sb.from("assessments").select("reflection,rubric_score,submitted_at").eq("user_id", me.id).maybeSingle()
+    ]);
+    const err = p.error || c.error || a.error;
+    if (err) throw err;
+    mine = {progress:{}, practice:{}, assessment:a.data || null};
+    p.data.forEach(r => mine.progress[r.lesson_id] = true);
+    c.data.forEach(r => { (mine.practice[r.lesson_key] ||= {})[r.item_index] = r.checked; });
+  } catch (e) {
+    console.warn("Offline or load failed, using saved copy", e);
+    mine = lsGet(cKey(), {progress:{}, practice:{}, assessment:null});
+  }
+  applyQueue(); lsSet(cKey(), mine); setSync(); flush();
+}
+
+/* ============================================================
+   5. LOGIN / SIGN UP / LOGOUT
+   ============================================================ */
+function setAuthMode(mode) {
+  authMode = mode; showMsg("authMsg", "");
+  const signup = mode === "signup";
+  $("nameRow").classList.toggle("hidden", !signup);
+  $("fullName").required = signup;
+  $("authBtn").textContent = signup ? "Create account" : "Log in";
+  $("switchText").textContent = signup ? "Already registered?" : "New student?";
+  $("switchBtn").textContent = signup ? "Log in" : "Create account";
+  $("password").autocomplete = signup ? "new-password" : "current-password";
+}
+$("switchBtn").onclick = () => setAuthMode(authMode === "login" ? "signup" : "login");
+
+$("authForm").onsubmit = async e => {
+  e.preventDefault();
+  if (!configured) { $("configWarn").classList.remove("hidden"); return; }
+  const email = $("email").value.trim(), password = $("password").value;
+  $("authBtn").disabled = true; showMsg("authMsg", "");
+  try {
+    if (authMode === "signup") {
+      const {data, error} = await sb.auth.signUp({email, password, options:{data:{full_name:$("fullName").value.trim()}}});
+      if (error) throw error;
+      if (!data.session) { showMsg("authMsg", "Account created. Check your email and click the confirmation link, then log in.", "ok"); setAuthMode("login"); return; }
+      await enter(data.session);
+    } else {
+      const {data, error} = await sb.auth.signInWithPassword({email, password});
+      if (error) throw error;
+      await enter(data.session);
+    }
+  } catch (err) {
+    showMsg("authMsg", err.message || "Something went wrong. Check your internet connection and try again.");
+  } finally { $("authBtn").disabled = false; }
+};
+
+async function enter(session) {
+  const uid = session.user.id;
+  let profile = null;
+  try {
+    const {data, error} = await sb.from("profiles").select("id,full_name,email,role").eq("id", uid).single();
+    if (error) throw error;
+    profile = data; lsSet("afadjatoProfile_" + uid, profile);
+  } catch (e) { profile = lsGet("afadjatoProfile_" + uid, null); }   // offline: use last known profile
+  if (!profile) { showMsg("authMsg", "Could not load your profile. Check your internet connection and try again."); await sb.auth.signOut(); return; }
+
+  me = profile;
+  $("loginScreen").classList.add("hidden"); $("app").classList.remove("hidden");
+  $("welcomeText").textContent = `Welcome, ${me.full_name || me.email}.`;
+  $("rolePill").textContent = ROLE_LABEL[me.role] || me.role;
+  document.querySelectorAll(".nav-btn[data-roles]").forEach(b => b.classList.toggle("hidden", !b.dataset.roles.split(",").includes(me.role)));
+  if (me.role === "student") await loadMine(); else { queue = []; setSync(); }
+  go("dashboard");
+}
+
+$("logoutBtn").onclick = async () => {
+  clearInterval(timerInt); timerInt = null; remaining = 1200; $("timer").textContent = "20:00";
+  await flush();
+  try { await sb.auth.signOut(); } catch {}
+  me = null; mine = {progress:{}, practice:{}, assessment:null}; queue = [];
+  $("app").classList.add("hidden"); $("loginScreen").classList.remove("hidden");
+  $("password").value = ""; showMsg("authMsg", "");
+};
+
+/* ============================================================
+   6. NAVIGATION
+   ============================================================ */
+function go(page) {
+  document.querySelectorAll(".page").forEach(p => p.classList.add("hidden"));
+  $("page-" + page).classList.remove("hidden");
+  document.querySelectorAll(".nav-btn[data-page]").forEach(b => b.classList.toggle("active", b.dataset.page === page));
+  $("pageTitle").textContent = PAGE_TITLE[page] || page;
+  if (page === "dashboard") renderDashboard();
+  if (page === "lessons") renderLessons();
+  if (page === "practice") renderPractice(document.querySelector(".tab.active")?.dataset?.practice || "l1");
+  if (page === "assessment") renderAssessment();
+  if (page === "progress") renderProgress();
+  if (page === "teaching") renderTeaching();
+  if (page === "students") renderStudents();
+  if (page === "admin") renderAdmin();
+  if (page === "reports") renderReports();
+}
+document.querySelectorAll(".nav-btn[data-page]").forEach(b => b.onclick = () => go(b.dataset.page));
+
+/* ============================================================
+   7. STUDENT PAGES
+   ============================================================ */
+async function renderDashboard() {
+  const box = $("page-dashboard");
+  if (me.role === "student") {
+    box.innerHTML = `<div class="grid">
+      <div class="card"><h3>My Course Progress</h3><div class="stat">${lessonPct()}%</div><div class="progress"><div style="width:${lessonPct()}%"></div></div></div>
+      <div class="card"><h3>Lessons Completed</h3><div class="stat">${doneCount()}/4</div></div>
+      <div class="card"><h3>Assessment</h3><div class="stat">${mine.assessment ? "Done" : "Pending"}</div></div></div>
+      <div class="card"><h3>Start Learning</h3><p>Begin with Lesson 1 and complete the practical activities in Microsoft Word.</p><button class="btn" onclick="go('lessons')">Open Lessons</button></div>`;
+    return;
+  }
+  box.innerHTML = `<div class="card muted">Loading class data…</div>`;
+  try {
+    const rows = (await fetchClass()).filter(r => r.role === "student");
+    const avg = rows.length ? Math.round(rows.reduce((s, r) => s + r.lessons_done, 0) / (rows.length * 4) * 100) : 0;
+    const submitted = rows.filter(r => r.submitted_at).length;
+    const needHelp = rows.filter(r => r.lessons_done < 2).length;
+    box.innerHTML = `<div class="grid">
+      <div class="card"><h3>Students</h3><div class="stat">${rows.length}</div></div>
+      <div class="card"><h3>Average Progress</h3><div class="stat">${avg}%</div></div>
+      <div class="card"><h3>Assessments Submitted</h3><div class="stat">${submitted}</div></div>
+      <div class="card"><h3>Need Re-teaching</h3><div class="stat">${needHelp}</div></div></div>
+      <div class="card"><h3>Next step</h3><p>Open the monitoring table to see each student, or the teaching plan for the lesson sequence.</p>
+      <button class="btn" onclick="go('students')">Student Monitoring</button> <button class="btn-alt" onclick="go('teaching')">Teaching Plan</button></div>`;
+  } catch (e) { box.innerHTML = `<div class="card"><div class="msg err">Could not load class data: ${esc(e.message || e)}</div></div>`; }
+}
+
+function renderLessons() {
+  $("lessonList").innerHTML = storyboard.map(l => `<div class="lesson-card"><h3>Lesson ${l.id}: ${l.title}</h3><p>${l.subtitle}</p><p class="meta">${l.minutes} minutes • ${l.frames.length} frames${mine.progress[l.id] ? " • ✔ completed" : ""}</p><button class="btn" onclick="openLesson(${l.id})">${mine.progress[l.id] ? "Review Lesson" : "Start Lesson"}</button></div>`).join("");
+  const p = lessonPct(); $("courseBar").style.width = p + "%"; $("coursePercent").textContent = `${p}% of the four-lesson course completed`;
+}
+function openLesson(id) {
+  const l = storyboard.find(x => x.id === id); $("lessonViewer").classList.remove("hidden");
+  $("lessonViewer").innerHTML = `<div class="card"><button class="btn-alt" onclick="closeLesson()">← Back to lessons</button><h2>Lesson ${l.id}: ${l.title}</h2><p>${l.subtitle}</p><div class="notice"><b>Storyboard design:</b> use short, simplified English, visual supports and pair/small-group work.</div>${l.frames.map(f => `<div class="frame"><span class="frame-time">${f[2]}</span><div class="frame-title">Frame ${f[0]} — ${f[1]}</div><div class="steps">${f[3]}</div><div class="visual"><b>Visual / media:</b> ${f[4]}</div></div>`).join("")}<button class="btn" onclick="completeLesson(${id})">${mine.progress[id] ? "Completed ✔" : "Mark Lesson " + id + " Complete"}</button></div>`;
+  window.scrollTo({top:0, behavior:"smooth"});
+}
+function closeLesson() { $("lessonViewer").classList.add("hidden"); }
+function completeLesson(id) {
+  if (!mine.progress[id]) { mine.progress[id] = true; enqueue("lesson_progress", {user_id: me.id, lesson_id: id}, "user_id,lesson_id"); }
+  renderLessons(); openLesson(id);
+}
+
+function renderPractice(key) {
+  const saved = mine.practice[key] || {};
+  $("practiceContent").innerHTML = `<h3>Lesson ${key.slice(1)} Practice</h3><div class="checklist">${practiceItems[key].map((x, i) => `<label><input type="checkbox" ${saved[i] ? "checked" : ""} onchange="savePractice('${key}',${i},this.checked)"> ${esc(x)}</label>`).join("")}</div>`;
+  document.querySelectorAll(".tab").forEach(b => b.classList.toggle("active", b.dataset.practice === key));
+}
+function savePractice(k, i, v) {
+  (mine.practice[k] ||= {})[i] = v;
+  enqueue("practice_checks", {user_id: me.id, lesson_key: k, item_index: i, checked: v, updated_at: new Date().toISOString()}, "user_id,lesson_key,item_index");
+}
+document.querySelectorAll(".tab").forEach(b => b.onclick = () => renderPractice(b.dataset.practice));
+
+function renderAssessment() {
+  const a = mine.assessment;
+  $("reflection").value = a?.reflection || "";
+  document.querySelectorAll("#rubricChecks input").forEach((x, i) => x.checked = !!a && i < (a.rubric_score || 0));
+  $("assessStatus").textContent = a ? "✔ You have already submitted a completion record. You may update it and submit again." : "";
+}
+function updateTimer() {
+  const m = Math.floor(remaining / 60), s = remaining % 60;
+  $("timer").textContent = `${String(m).padStart(2,"0")}:${String(s).padStart(2,"0")}`;
+  if (remaining <= 0) { clearInterval(timerInt); timerInt = null; remaining = 1200; alert("Time is up."); return; }
+  remaining--;
+}
+$("startTimer").onclick = () => { if (!timerInt) { updateTimer(); timerInt = setInterval(updateTimer, 1000); } };
+$("resetTimer").onclick = () => { clearInterval(timerInt); timerInt = null; remaining = 1200; $("timer").textContent = "20:00"; };
+$("submitAssessment").onclick = () => {
+  const score = [...document.querySelectorAll("#rubricChecks input")].filter(x => x.checked).length;
+  mine.assessment = {reflection: $("reflection").value, rubric_score: score};
+  enqueue("assessments", {user_id: me.id, reflection: $("reflection").value, rubric_score: score, submitted_at: new Date().toISOString()}, "user_id");
+  $("assessStatus").textContent = "✔ Completion record saved.";
+  alert("Assessment completion recorded.");
+};
+
+function renderProgress() {
+  $("progressContent").innerHTML = `<div class="card"><h3>My Learning Progress</h3><div class="stat">${lessonPct()}%</div><div class="progress"><div style="width:${lessonPct()}%"></div></div><p class="muted">${doneCount()} of 4 lessons completed.</p></div><div class="card"><h3>Storyboard Self-Check</h3><ul><li>Can you turn on the computer, open Word, type and save?</li><li>Can you use bold, italic, underline, font size and alignment?</li><li>Can you build a full formal letter?</li><li>Can you complete the task within 20 minutes?</li></ul></div>`;
+}
+
+/* ============================================================
+   8. TEACHER / ADMIN PAGES (live data from Supabase)
+   ============================================================ */
+async function fetchClass() {
+  const {data, error} = await sb.from("class_summary").select("*").order("full_name");
+  if (error) throw error;
+  return data;
+}
+
+function renderTeaching() {
+  $("teacherPlan").innerHTML = storyboard.map(l => `<div class="card"><h3>Lesson ${l.id}: ${l.title} (${l.minutes} min)</h3><p>${l.subtitle}</p><details><summary><b>Open frame-by-frame teaching plan</b></summary>${l.frames.map(f => `<div class="frame"><b>${f[0]} ${f[1]} — ${f[2]}</b><p><b>Content:</b> ${f[3]}</p><p><b>Visual:</b> ${f[4]}</p></div>`).join("")}</details></div>`).join("");
+}
+
+async function renderStudents() {
+  const body = $("studentTable");
+  body.innerHTML = `<tr><td colspan="7" class="muted">Loading…</td></tr>`;
+  try {
+    const rows = (await fetchClass()).filter(r => r.role === "student");
+    body.innerHTML = rows.length ? rows.map(r => `<tr><td>${esc(r.full_name)}</td><td>${esc(r.email)}</td><td>${r.lessons_done}/4</td><td>${r.practice_done}</td><td>${r.submitted_at ? "Submitted" : "Not submitted"}</td><td>${r.submitted_at ? r.rubric_score + "/3" : "–"}</td><td>${supportLabel(r.lessons_done)}</td></tr>`).join("")
+      : `<tr><td colspan="7" class="muted">No students have registered yet.</td></tr>`;
+  } catch (e) { body.innerHTML = `<tr><td colspan="7"><div class="msg err">Could not load students: ${esc(e.message || e)}</div></td></tr>`; }
+}
+$("refreshStudents").onclick = renderStudents;
+
+async function renderAdmin() {
+  const tbody = $("userTable"); showMsg("adminMsg", "");
+  tbody.innerHTML = `<tr><td colspan="4" class="muted">Loading…</td></tr>`;
+  try {
+    const rows = await fetchClass();
+    const count = r => rows.filter(x => x.role === r).length;
+    $("adminStats").innerHTML = `<div class="card"><div class="stat">${rows.length}</div>Total accounts</div><div class="card"><div class="stat">${count("student")}</div>Students</div><div class="card"><div class="stat">${count("teacher")}</div>Teachers</div><div class="card"><div class="stat">${count("admin")}</div>Administrators</div>`;
+    tbody.innerHTML = rows.map(r => `<tr><td>${esc(r.full_name)}</td><td>${esc(r.email)}</td><td><select id="role_${r.id}" ${r.id === me.id ? "disabled title='You cannot change your own role'" : ""}>${["student","teacher","admin"].map(x => `<option value="${x}" ${r.role === x ? "selected" : ""}>${ROLE_LABEL[x]}</option>`).join("")}</select></td><td>${r.id === me.id ? "" : `<button class="btn-alt" onclick="saveRole('${r.id}')">Save</button>`}</td></tr>`).join("");
+  } catch (e) { tbody.innerHTML = `<tr><td colspan="4"><div class="msg err">Could not load users: ${esc(e.message || e)}</div></td></tr>`; }
+}
+async function saveRole(id) {
+  const role = $("role_" + id).value;
+  const {error} = await sb.from("profiles").update({role}).eq("id", id);
+  showMsg("adminMsg", error ? "Could not change role: " + error.message : "Role updated.", error ? "err" : "ok");
+  if (!error) renderAdmin();
+}
+
+async function renderReports() {
+  const box = $("reportsContent");
+  box.innerHTML = `<div class="card muted">Loading report…</div>`;
+  try {
+    const rows = (await fetchClass()).filter(r => r.role === "student");
+    window._reportRows = rows;
+    const lessonCounts = [1,2,3,4].map(n => 0);
+    const {data: lp, error} = await sb.from("lesson_progress").select("lesson_id");
+    if (error) throw error;
+    lp.forEach(r => lessonCounts[r.lesson_id - 1]++);
+    const avg = rows.length ? Math.round(rows.reduce((s, r) => s + r.lessons_done, 0) / (rows.length * 4) * 100) : 0;
+    const submitted = rows.filter(r => r.submitted_at).length;
+    box.innerHTML = `<div class="card"><h3>Instructional Report</h3>
+      <p><b>Course:</b> Word-Processing Skills for SHS 1</p>
+      <p><b>Target:</b> independently create and format a business letter within 20 minutes at 70% proficiency.</p>
+      <div class="grid"><div class="card"><div class="stat">${rows.length}</div>Registered students</div><div class="card"><div class="stat">${avg}%</div>Average course progress</div><div class="card"><div class="stat">${submitted}</div>Assessments submitted</div></div>
+      <h3>Lesson completion</h3>
+      <div class="table-wrap"><table><thead><tr><th>Lesson</th><th>Students completed</th></tr></thead><tbody>${storyboard.map((l, i) => `<tr><td>Lesson ${l.id}: ${esc(l.title)}</td><td>${lessonCounts[i]} of ${rows.length}</td></tr>`).join("")}</tbody></table></div>
+      <p style="margin-top:16px"><button class="btn" onclick="downloadCsv()">Download student results (CSV)</button></p></div>`;
+  } catch (e) { box.innerHTML = `<div class="card"><div class="msg err">Could not load report: ${esc(e.message || e)}</div></div>`; }
+}
+function csvCell(v) {
+  let s = String(v ?? "");
+  if (/^[=+\-@\t\r]/.test(s)) s = "'" + s;   // stop spreadsheet formula injection
+  return '"' + s.replace(/"/g, '""') + '"';
+}
+function downloadCsv() {
+  const rows = window._reportRows || [];
+  const head = ["Name","Email","Lessons completed (of 4)","Practice ticks","Assessment submitted","Rubric score (of 3)","Support"];
+  const lines = [head, ...rows.map(r => [r.full_name, r.email, r.lessons_done, r.practice_done, r.submitted_at ? "Yes" : "No", r.submitted_at ? r.rubric_score : "", supportLabel(r.lessons_done)])];
+  const blob = new Blob(["﻿" + lines.map(l => l.map(csvCell).join(",")).join("\r\n")], {type:"text/csv;charset=utf-8"});
+  const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = "afadjato-ict-results.csv"; a.click(); URL.revokeObjectURL(a.href);
+}
+
+/* ============================================================
+   9. START-UP: restore an existing session if there is one
+   ============================================================ */
+(async function init() {
+  if (!configured) { $("configWarn").classList.remove("hidden"); return; }
+  try {
+    const {data} = await sb.auth.getSession();
+    if (data.session) await enter(data.session);
+  } catch (e) { console.warn(e); }
+})();
+</script>
+</body>
+</html>
